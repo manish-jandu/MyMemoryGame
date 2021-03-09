@@ -2,14 +2,19 @@ package com.example.mymemory
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.mymemory.models.BoardSize
-import com.example.mymemory.models.MemoryCard
-import com.example.mymemory.utils.DEFAULT_ICONS
+import com.example.mymemory.models.MemoryGame
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
+    companion object{
+        private const val TAG = "Main Activity"
+    }
+    private lateinit var memoryGame: MemoryGame
+    private lateinit var adapter: MemoryBoardAdapter
     private var boardSize:BoardSize = BoardSize.EASY
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,12 +22,20 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val chosenImages:List<Int> = DEFAULT_ICONS.shuffled().take(boardSize.numCards)
-        val randomizedImages:List<Int> = (chosenImages + chosenImages).shuffled()
-        val memoryCards:List<MemoryCard> = randomizedImages.map { MemoryCard(it) }
+        memoryGame = MemoryGame(boardSize)
 
-        rvBoard.adapter = MemoryBoardAdapter(this,boardSize,memoryCards)
+        adapter =MemoryBoardAdapter(this,boardSize,memoryGame.cards,object:MemoryBoardAdapter.CardClickListener{
+            override fun onCardClicked(position: Int) {
+               updateGameWithFlip(position)
+            }
+        })
+        rvBoard.adapter =adapter
         rvBoard.setHasFixedSize(true)
         rvBoard.layoutManager = GridLayoutManager(this,boardSize.getWidth())
+    }
+
+    private fun updateGameWithFlip(position: Int) {
+        memoryGame.flipCard(position)
+        adapter.notifyDataSetChanged()
     }
 }
