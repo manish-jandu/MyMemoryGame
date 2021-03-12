@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.mymemory.models.BoardSize
 import com.example.mymemory.models.MemoryGame
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -35,7 +36,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateGameWithFlip(position: Int) {
-        memoryGame.flipCard(position)
+        //Error checking
+        if(memoryGame.haveWonGame()){
+            //Alert the user of an invalid game
+                Snackbar.make(clRoot,"You already won!",Snackbar.LENGTH_LONG).show()
+            return
+        }
+        if(memoryGame.isCardFaceUp(position)){
+            Snackbar.make(clRoot,"Invalid Move",Snackbar.LENGTH_LONG).show()
+            //Alert the user of an invalid game
+            return
+        }
+        //Actually flipping over the card
+       if( memoryGame.flipCard(position)){
+           Log.i(TAG,"Found a match! Num match found ${memoryGame.numPairsFound}")
+       }
         adapter.notifyDataSetChanged()
     }
 }
