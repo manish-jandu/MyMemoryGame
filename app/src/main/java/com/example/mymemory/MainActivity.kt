@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
@@ -23,6 +24,7 @@ import com.example.mymemory.utils.EXTRA_GAME_NAME
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -70,6 +72,10 @@ class MainActivity : AppCompatActivity() {
                 showCreationDialog()
                 return true
             }
+            R.id.mi_download ->{
+                showDownloadDialog()
+                return true
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -85,6 +91,16 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    private fun showDownloadDialog() {
+        val boardDownloadView = LayoutInflater.from(this).inflate(R.layout.dialog_download_board,null)
+        showAlertDialog("Fetch Memory game",boardDownloadView,View.OnClickListener {
+            //grab the text of the game name that user wants to download
+            val etDownloadGame = boardDownloadView.findViewById<EditText>(R.id.etDownloadGame)
+            val gameToDownload = etDownloadGame.text.toString().trim()
+            downloadGame(gameToDownload)
+        })
+    }
+
     private fun downloadGame(customGameName: String) {
         db.collection("games").document(customGameName).get()
                 .addOnSuccessListener {document ->
@@ -93,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                         Log.e(TAG,"Invalid custom game data from Firestore")
                         Snackbar.make(
                                 clRoot,
-                                "Sorry we couldnot find any such game,'$customGameName'",
+                                "Sorry we could not find any such game,'$customGameName'",
                                 Snackbar.LENGTH_SHORT
                         ).show()
                     }
@@ -102,6 +118,14 @@ class MainActivity : AppCompatActivity() {
                     boardSize = BoardSize.getByValue(numCards)
                     gameName = customGameName
                     customGameImages = userImageList.images
+                    //pre fetch image s
+                    for(imageUrl in userImageList.images!!){
+                        Picasso.get().load(imageUrl).placeholder(R.drawable.ic_image).fetch()
+                    }
+                    Snackbar.make(
+                            clRoot,
+                            "you are playing ${customGameName}",
+                            Snackbar.LENGTH_SHORT).show()
                     setupBoard()
                 }
                 .addOnFailureListener{Exception ->
